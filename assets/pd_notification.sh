@@ -22,8 +22,10 @@ fi
 set -u
 
 SMUGGLER_atc_external_url=${SMUGGLER_atc_external_url:-${ATC_EXTERNAL_URL}}
-error_context="No error context possible without valid ATC url and credentials."
-if [ "${SMUGGLER_atc_external_url:-}" != "" ] && [ "${SMUGGLER_atc_username:-}" != "" ] && [ "${SMUGGLER_atc_password:-}" != "" ]; then
+error_context="No error context supplied."
+if [ "${SMUGGLER_context:-}" != "" ]; then
+  error_context=$(cat "$SMUGGLER_SOURCES_DIR/$SMUGGLER_context" 2>/dev/null || echo $SMUGGLER_context)
+elif [ "${SMUGGLER_atc_external_url:-}" != "" ] && [ "${SMUGGLER_atc_username:-}" != "" ] && [ "${SMUGGLER_atc_password:-}" != "" ]; then
     error_context="$(python /opt/resource/pd_error_capture.py \
     ${SMUGGLER_atc_external_url} \
     ${SMUGGLER_atc_username} \
@@ -35,7 +37,7 @@ concourse_build_url="${SMUGGLER_atc_external_url}/builds/${BUILD_ID}"
 
 data="$(
 jq -n \
-  --arg description "${SMUGGLER_description}" \
+  --arg description "$(cat "$SMUGGLER_SOURCES_DIR/$SMUGGLER_description" 2>/dev/null || echo $SMUGGLER_description)" \
   --arg service_key "${SMUGGLER_service_key}" \
   --arg incident_key "${SMUGGLER_incident_key}" \
   --arg action "${SMUGGLER_action}" \
